@@ -31,7 +31,10 @@ class AlbumsHandler {
 
   async getAlbumByIdHandler(request, h) {
     const { id } = request.params;
-    const album = await this._service.getAlbumById(id);
+    const dataAlbum = await this._service.getAlbumById(id);
+    const songs = await this._service.getSongsByAlbumId(id);
+    const album = { ...dataAlbum, songs };
+
     return {
       status: "success",
       data: {
@@ -46,7 +49,7 @@ class AlbumsHandler {
     await this._service.editAlbumById(id, request.payload);
     return {
       status: "success",
-      message: "Catatan berhasil diperbarui",
+      message: "Album has been updated",
     };
   }
 
@@ -55,7 +58,7 @@ class AlbumsHandler {
     await this._service.deleteAlbumById(id);
     return {
       status: "success",
-      message: "Catatan berhasil dihapus",
+      message: "Album has been deleted",
     };
   }
 }
