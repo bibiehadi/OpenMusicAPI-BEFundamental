@@ -6,7 +6,8 @@
   "scripts": {
     "start-prod": "NODE_ENV=production node ./source/server.js",
     "start-dev": "nodemon ./source/server.js",
-    "migrate": "node-pg-migrate"
+    "migrate": "node-pg-migrate",
+    "lint": "eslint ./"
   },
   "keywords": [],
   "author": "",
@@ -20,6 +21,9 @@
     "pg": "^8.11.1"
   },
   "devDependencies": {
+    "eslint": "^8.46.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.28.0",
     "nodemon": "^3.0.1",
     "prettier": "3.0.0"
   }

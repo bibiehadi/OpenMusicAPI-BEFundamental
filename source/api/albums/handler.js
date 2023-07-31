@@ -1,6 +1,8 @@
 class AlbumsHandler {
   constructor(service, validator) {
+    // eslint-disable-next-line no-underscore-dangle
     this._service = service;
+    // eslint-disable-next-line no-underscore-dangle
     this._validator = validator;
   }
 
@@ -9,8 +11,8 @@ class AlbumsHandler {
     const { name, year } = request.payload;
     const albumId = await this._service.addAlbum({ name, year });
     const response = h.response({
-      status: "success",
-      message: "Album added success!",
+      status: 'success',
+      message: 'Album added success!',
       data: {
         albumId,
       },
@@ -22,43 +24,43 @@ class AlbumsHandler {
   async getAlbumsHandler() {
     const albums = await this._service.getAlbums();
     return {
-      status: "success",
+      status: 'success',
       data: {
         albums,
       },
     };
   }
 
-  async getAlbumByIdHandler(request, h) {
+  async getAlbumByIdHandler(request) {
     const { id } = request.params;
     const dataAlbum = await this._service.getAlbumById(id);
     const songs = await this._service.getSongsByAlbumId(id);
     const album = { ...dataAlbum, songs };
 
     return {
-      status: "success",
+      status: 'success',
       data: {
         album,
       },
     };
   }
 
-  async putAlbumByIdHandler(request, h) {
+  async putAlbumByIdHandler(request) {
     this._validator.validateAlbumPayload(request.payload);
     const { id } = request.params;
     await this._service.editAlbumById(id, request.payload);
     return {
-      status: "success",
-      message: "Album has been updated",
+      status: 'success',
+      message: 'Album has been updated',
     };
   }
 
-  async deleteAlbumByIdHandler(request, h) {
+  async deleteAlbumByIdHandler(request) {
     const { id } = request.params;
     await this._service.deleteAlbumById(id);
     return {
-      status: "success",
-      message: "Album has been deleted",
+      status: 'success',
+      message: 'Album has been deleted',
     };
   }
 }
