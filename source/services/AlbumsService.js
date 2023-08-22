@@ -17,8 +17,8 @@ class AlbumsService {
     const id = nanoid(16);
     const createdAt = new Date().toISOString();
     const query = {
-      text: 'INSERT INTO albums VALUES ($1, $2, $3, $4, $5) RETURNING id',
-      values: [id, name, year, createdAt, createdAt],
+      text: 'INSERT INTO albums VALUES ($1, $2, $3, $4, $4) RETURNING id',
+      values: [id, name, year, createdAt],
     };
 
     const result = await this._pool.query(query);
@@ -42,7 +42,7 @@ class AlbumsService {
 
     const result = await this._pool.query(query);
 
-    if (!result.rows.length) {
+    if (!result.rowCount) {
       throw new NotFoundError('Album not found');
     }
     return result.rows.map(mapDBToDetailAlbumsModel)[0];
@@ -54,10 +54,10 @@ class AlbumsService {
       values: [albumId],
     };
     const result = await this._pool.query(query);
-    if (!result.rows.length) {
+    if (!result.rowCount) {
       return [];
     }
-    return result.rows.map(mapDBToSongsModel);
+    return mapDBToSongsModel(result.rows[0]);
   }
 
   async editAlbumById(id, { name, year }) {
@@ -68,7 +68,7 @@ class AlbumsService {
     };
 
     const result = await this._pool.query(query);
-    if (!result.rows.length) {
+    if (!result.rowCount) {
       throw new NotFoundError('Album update failed, id not found');
     }
   }
@@ -79,7 +79,7 @@ class AlbumsService {
       values: [id],
     };
     const result = await this._pool.query(query);
-    if (!result.rows.length) {
+    if (!result.rowCount) {
       throw new NotFoundError('Album delete failed, Album not found');
     }
   }
