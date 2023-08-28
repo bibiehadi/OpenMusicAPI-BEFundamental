@@ -10,6 +10,7 @@ const { mapDBToSongsModel } = require('../utils/Songs');
 
 class AlbumsService {
   constructor() {
+    // eslint-disable-next-line no-underscore-dangle
     this._pool = new Pool();
   }
 
@@ -21,6 +22,7 @@ class AlbumsService {
       values: [id, name, year, createdAt],
     };
 
+    // eslint-disable-next-line no-underscore-dangle
     const result = await this._pool.query(query);
 
     if (!result.rows[0].id) {
@@ -30,6 +32,7 @@ class AlbumsService {
   }
 
   async getAlbums() {
+    // eslint-disable-next-line no-underscore-dangle
     const result = await this._pool.query('SELECT * FROM albums');
     return result.rows.map(mapDBToAlbumsModel);
   }
@@ -40,24 +43,13 @@ class AlbumsService {
       values: [id],
     };
 
+    // eslint-disable-next-line no-underscore-dangle
     const result = await this._pool.query(query);
 
     if (!result.rowCount) {
       throw new NotFoundError('Album not found');
     }
     return result.rows.map(mapDBToDetailAlbumsModel)[0];
-  }
-
-  async getSongsByAlbumId(albumId) {
-    const query = {
-      text: 'SELECT id, title, performer FROM songs WHERE "albumId" = $1',
-      values: [albumId],
-    };
-    const result = await this._pool.query(query);
-    if (!result.rowCount) {
-      return [];
-    }
-    return mapDBToSongsModel(result.rows[0]);
   }
 
   async editAlbumById(id, { name, year }) {

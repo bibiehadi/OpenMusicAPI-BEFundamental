@@ -1,15 +1,14 @@
 class AlbumsHandler {
-  constructor(service, validator) {
-    // eslint-disable-next-line no-underscore-dangle
-    this._service = service;
-    // eslint-disable-next-line no-underscore-dangle
+  constructor(albumService, songsService, validator) {
+    this._albumsService = albumService;
+    this._songsService = songsService;
     this._validator = validator;
   }
 
   async postAlbumHandler(request, h) {
     this._validator.validateAlbumPayload(request.payload);
     const { name, year } = request.payload;
-    const albumId = await this._service.addAlbum({ name, year });
+    const albumId = await this._albumsService.addAlbum({ name, year });
     const response = h.response({
       status: 'success',
       message: 'Album added success!',
@@ -22,7 +21,7 @@ class AlbumsHandler {
   }
 
   async getAlbumsHandler() {
-    const albums = await this._service.getAlbums();
+    const albums = await this._albumsService.getAlbums();
     return {
       status: 'success',
       data: {
@@ -33,8 +32,8 @@ class AlbumsHandler {
 
   async getAlbumByIdHandler(request) {
     const { id } = request.params;
-    const dataAlbum = await this._service.getAlbumById(id);
-    const songs = await this._service.getSongsByAlbumId(id);
+    const dataAlbum = await this._albumsService.getAlbumById(id);
+    const songs = await this._songsService.getSongsByAlbumId(id);
     const album = { ...dataAlbum, songs };
 
     return {
@@ -48,7 +47,7 @@ class AlbumsHandler {
   async putAlbumByIdHandler(request) {
     this._validator.validateAlbumPayload(request.payload);
     const { id } = request.params;
-    await this._service.editAlbumById(id, request.payload);
+    await this._albumsService.editAlbumById(id, request.payload);
     return {
       status: 'success',
       message: 'Album has been updated',
@@ -57,7 +56,7 @@ class AlbumsHandler {
 
   async deleteAlbumByIdHandler(request) {
     const { id } = request.params;
-    await this._service.deleteAlbumById(id);
+    await this._albumsService.deleteAlbumById(id);
     return {
       status: 'success',
       message: 'Album has been deleted',

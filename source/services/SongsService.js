@@ -88,6 +88,34 @@ class SongsService {
     return result.rows.map(mapDBToDetailSongsModel)[0];
   }
 
+  async getSongsByAlbumId(albumId) {
+    const query = {
+      text: `SELECT songs.id, title, performer FROM songs 
+        LEFT JOIN albums ON songs.album_id = albums.id
+        WHERE album_id = $1`,
+      values: [albumId],
+    };
+    const result = await this._pool.query(query);
+    if (!result.rowCount) {
+      return [];
+    }
+    return result.rows;
+  }
+
+  async getSongsByPlaylistId(playlistId) {
+    const query = {
+      text: `SELECT songs.id, songs.title, songs.performer FROM songs 
+        LEFT JOIN playlist_songs ON songs.id = playlist_songs.song_id
+        WHERE playlist_songs.playlist_id = $1`,
+      values: [playlistId],
+    };
+    const result = await this._pool.query(query);
+    if (!result.rowCount) {
+      return [];
+    }
+    return result.rows;
+  }
+
   async editSongById(
     id,
     {
@@ -96,7 +124,7 @@ class SongsService {
   ) {
     const updatedAt = new Date().toISOString();
     const query = {
-      text: 'UPDATE songs SET title = $1, year = $2, genre = $3, performer = $4, duration = $5, "albumId" = $6, updated_at = $7 where id = $8 RETURNING id',
+      text: 'UPDATE songs SET title = $1, year = $2, genre = $3, performer = $4, duration = $5, album_id = $6, updated_at = $7 where id = $8 RETURNING id',
       values: [title, year, genre, performer, duration, albumId, updatedAt, id],
     };
 
