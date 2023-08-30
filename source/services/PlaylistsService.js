@@ -29,14 +29,14 @@ class PlaylistsService {
     const query = {
       text: `SELECT playlists.id, playlists.name, users.username  FROM playlists
              LEFT JOIN users ON playlists.owner = users.id
-             LEFT JOIN collaborations ON playlists.owner = collaborations.id
-             WHERE playlists.owner = $1 OR collaborations.id = $1 OR users.id = $1
+             LEFT JOIN collaborations ON playlists.id = collaborations.playlist_id
+             WHERE playlists.owner = $1 OR collaborations.user_id = $1 OR users.id = $1
              GROUP BY playlists.id, playlists.name, users.username
             `,
       values: [userId],
     };
     const result = await this._pool.query(query);
-    if (!result.rows.length) {
+    if (!result.rowCount) {
       return [];
     }
     return result.rows;
@@ -46,15 +46,15 @@ class PlaylistsService {
     const query = {
       text: `SELECT playlists.id, playlists.name, users.username  FROM playlists
              LEFT JOIN users ON playlists.owner = users.id
-             LEFT JOIN collaborations ON playlists.owner = collaborations.id
-             WHERE playlists.id = $1 AND playlists.owner = $2
+             LEFT JOIN collaborations ON playlists.id = collaborations.playlist_id
+             WHERE playlists.id = $1 AND ( playlists.owner = $2 OR collaborations.user_id = $2)
              GROUP BY playlists.id, playlists.name, users.username
             `,
       values: [playlistId, userId],
     };
     const result = await this._pool.query(query);
-    if (!result.rows.length) {
-      throw new NotFoundError('Song not found');
+    if (!result.rowCount) {
+      throw new NotFoundError('Playlist not found');
     }
     return result.rows[0];
   }
@@ -66,25 +66,62 @@ class PlaylistsService {
     };
 
     const result = await this._pool.query(query);
-    if (!result.rows.length) {
+    if (!result.rowCount) {
       throw new NotFoundError('Gagal menghapus playlist. Id tidak ditemukan');
     }
   }
 
   async verifyPlaylistOwner(id, owner) {
+    const ownerName = owner;
     const query = {
-      text: 'SELECT * FROM playlists WHERE id = $1',
+      text: `SELECT * FROM playlists 
+         WHERE id = $1`,
       values: [id],
     };
-
     const result = await this._pool.query(query);
     if (!result.rowCount) {
       throw new NotFoundError('playlists tidak ditemukan');
     }
+    const playlist = result.rows[0];
+    if (playlist.owner !== ownerName) {
+      await this.verifyPlaylistCollaborations(id, owner);
+    }
+  }
 
+  async verifyDeletePlaylistOwner(id, owner) {
+    const query = {
+      text: `SELECT * FROM playlists 
+         WHERE id = $1`,
+      values: [id],
+    };
+    const result = await this._pool.query(query);
+    if (!result.rowCount) {
+      throw new NotFoundError('playlists tidak ditemukan');
+    }
     const playlist = result.rows[0];
     if (playlist.owner !== owner) {
       throw new AuthorizationError('Anda tidak berhak mengakses resource ini');
+    }
+  }
+
+  async verifyPlaylistCollaborations(id, userId) {
+    const query = {
+      text: `SELECT * FROM playlists 
+         LEFT JOIN collaborations c on playlists.id = c.playlist_id
+         WHERE playlist_id = $1`,
+      values: [id],
+    };
+
+    const result = await this._pool.query(query);
+
+    if (!result.rowCount > 0) {
+      throw new AuthorizationError('Anda tidak berhak mengakses resource ini');
+    }
+    const playlist = result.rows[0];
+    if (playlist.owner !== userId) {
+      if (playlist.user_id !== userId) {
+        throw new AuthorizationError('Anda tidak berhak mengakses resource ini');
+      }
     }
   }
 
@@ -109,9 +146,38 @@ class PlaylistsService {
     };
 
     const result = await this._pool.query(query);
-    if (!result.rows.length) {
+    if (!result.rowCount) {
       throw new NotFoundError('Gagal menghapus song. Id tidak ditemukan');
     }
+  }
+
+  async addPlaylistSongActivity(playlistId, songId, userId, action) {
+    const id = nanoid(16);
+    const createdAt = new Date().toISOString();
+    const query = {
+      text: 'INSERT INTO playlist_song_activities VALUES ($1, $2, $3, $4, $5, $6, $6, $6) RETURNING id',
+      values: [id, playlistId, songId, userId, action, createdAt],
+    };
+    const result = await this._pool.query(query);
+    if (!result.rows[0].id) {
+      throw new InvariantError('Playlist Song Activity gagal ditambahkan');
+    }
+    return result.rows[0].id;
+  }
+
+  async getPlaylistSongActivities(playlistId) {
+    const query = {
+      text: `SELECT users.username, songs.title, playlist_song_activities.action, playlist_song_activities.time FROM playlist_song_activities 
+            LEFT JOIN users ON playlist_song_activities.user_id = users.id
+            LEFT JOIN songs ON playlist_song_activities.song_id = songs.id
+            WHERE playlist_song_activities.playlist_id = $1`,
+      values: [playlistId],
+    };
+    const result = await this._pool.query(query);
+    if (!result.rowCount) {
+      return [];
+    }
+    return result.rows;
   }
 }
 
