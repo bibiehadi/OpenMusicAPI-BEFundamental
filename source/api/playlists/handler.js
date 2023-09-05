@@ -1,7 +1,8 @@
 class PlaylistsHandler {
-  constructor(service, songsService, validator) {
+  constructor(service, songsService, ProducerService, validator) {
     this._playlistsService = service;
     this._songsService = songsService;
+    this._producerService = ProducerService;
     this._validator = validator;
   }
 
@@ -93,7 +94,7 @@ class PlaylistsHandler {
     };
   }
 
-  async getPlaylistSongActivities(request, h) {
+  async getPlaylistSongActivitiesHandler(request, h) {
     const { id: playlistId } = request.params;
     const { id: credentialId } = request.auth.credentials;
     await this._playlistsService.verifyPlaylistOwner(playlistId, credentialId);
@@ -106,6 +107,28 @@ class PlaylistsHandler {
         activities,
       },
     };
+  }
+
+  async postExportPlaylistHandler(request, h) {
+    this._validator.validateExportPlaylistPayload(request.payload);
+    const { id: playlistId } = request.params;
+    const { id: credentialId } = request.auth.credentials;
+    await this._playlistsService.verifyPlaylistOwner(playlistId, credentialId);
+    await this._playlistsService.getPlaylistById(playlistId, credentialId);
+    const message = {
+      userId: credentialId,
+      playlistId,
+      targetEmail: request.payload.targetEmail,
+    };
+
+    await this._producerService.sendMessage('export:playlist', JSON.stringify(message));
+
+    const response = h.response({
+      status: 'success',
+      message: 'Permintaan anda dalam antrian',
+    });
+    response.code(201);
+    return response;
   }
 }
 

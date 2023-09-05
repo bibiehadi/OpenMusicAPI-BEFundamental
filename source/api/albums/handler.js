@@ -1,7 +1,8 @@
 class AlbumsHandler {
-  constructor(albumService, songsService, validator) {
-    this._albumsService = albumService;
+  constructor(albumsService, songsService, albumLikesService, validator) {
+    this._albumsService = albumsService;
     this._songsService = songsService;
+    this._albumLikesService = albumLikesService;
     this._validator = validator;
   }
 
@@ -60,6 +61,41 @@ class AlbumsHandler {
     return {
       status: 'success',
       message: 'Album has been deleted',
+    };
+  }
+
+  async postAlbumLikeHandler(request, h) {
+    const { id: albumId } = request.params;
+    const { id: credentialId } = request.auth.credentials;
+    await this._albumsService.getAlbumById(albumId);
+    await this._albumLikesService.getAlbumLike(credentialId, albumId);
+    await this._albumLikesService.addAlbumLike(credentialId, albumId);
+    const response = h.response({
+      status: 'success',
+      message: 'Menyukai album berhasil!',
+    });
+    response.code(201);
+    return response;
+  }
+
+  async getAlbumLikesCountHandler(request, h){
+    const { id: albumId } = request.params;
+    const likes = await this._albumLikesService.getAlbumLikesByAlbumId(albumId);
+    return h.response({
+      status: 'success',
+      data: {
+        likes: likes.length,
+      },
+    });
+  }
+
+  async deleteAlbumLikeHandler(request, h) {
+    const { id: albumId } = request.params;
+    const { id: credentialId } = request.auth.credentials;
+    await this._albumLikesService.deleteAlbumLike(credentialId, albumId);
+    return {
+      status: 'success',
+      message: 'Menyukai album berhasil dihapus',
     };
   }
 }

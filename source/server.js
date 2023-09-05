@@ -6,6 +6,7 @@ const Jwt = require('@hapi/jwt');
 const ClientError = require('./exceptions/ClientError');
 const albums = require('./api/albums');
 const AlbumsService = require('./services/AlbumsService');
+const AlbumLikesService = require('./services/AlbumLikesService');
 const AlbumsValidator = require('./validator/albums');
 
 const songs = require('./api/songs');
@@ -24,6 +25,7 @@ const TokenManager = require('./tokenize/TokenManager');
 const playlists = require('./api/playlists');
 const PlaylistsService = require('./services/PlaylistsService');
 const PlaylistsValidator = require('./validator/playlists');
+const ProducerService = require('./services/rabbitmq/ProducerService');
 
 const collaborations = require('./api/collaborations');
 const CollaborationsService = require('./services/CollaborationsService');
@@ -36,6 +38,7 @@ const init = async () => {
   const authenticationsService = new AuthenticationsService();
   const playlistsService = new PlaylistsService();
   const collaborationsService = new CollaborationsService();
+  const albumLikesService = new AlbumLikesService();
 
   const server = Hapi.server({
     port: process.env.PORT,
@@ -73,6 +76,7 @@ const init = async () => {
       options: {
         albumsService,
         songsService,
+        albumLikesService,
         validator: AlbumsValidator,
       },
     },
@@ -104,6 +108,7 @@ const init = async () => {
       options: {
         playlistsService,
         songsService,
+        ProducerService,
         validator: PlaylistsValidator,
       },
     },

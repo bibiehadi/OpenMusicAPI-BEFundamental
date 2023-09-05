@@ -6,7 +6,6 @@ const {
   mapDBToAlbumsModel,
   mapDBToDetailAlbumsModel,
 } = require('../utils/Albums');
-const { mapDBToSongsModel } = require('../utils/Songs');
 
 class AlbumsService {
   constructor() {
