@@ -39,7 +39,7 @@ class AlbumsHandler {
       id: dataAlbum.id,
       name: dataAlbum.name,
       year: dataAlbum.year,
-      coverUrl: `http://${process.env.HOST}:${process.env.PORT}/albums/covers/${dataAlbum.cover}` ?? null,
+      coverUrl: dataAlbum.cover ? `http://${process.env.HOST}:${process.env.PORT}/albums/covers/${dataAlbum.cover}` : null,
     };
     const songs = await this._songsService.getSongsByAlbumId(id);
     const album = { ...data, songs };
