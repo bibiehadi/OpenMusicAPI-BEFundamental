@@ -1,8 +1,9 @@
 class AlbumsHandler {
-  constructor(albumsService, songsService, albumLikesService, validator) {
+  constructor(albumsService, songsService, albumLikesService, storageService, validator) {
     this._albumsService = albumsService;
     this._songsService = songsService;
     this._albumLikesService = albumLikesService;
+    this._storageService = storageService;
     this._validator = validator;
   }
 
@@ -34,8 +35,14 @@ class AlbumsHandler {
   async getAlbumByIdHandler(request) {
     const { id } = request.params;
     const dataAlbum = await this._albumsService.getAlbumById(id);
+    const data = {
+      id: dataAlbum.id,
+      name: dataAlbum.name,
+      year: dataAlbum.year,
+      coverUrl: `http://${process.env.HOST}:${process.env.PORT}/albums/covers/${dataAlbum.cover}` ?? null,
+    };
     const songs = await this._songsService.getSongsByAlbumId(id);
-    const album = { ...dataAlbum, songs };
+    const album = { ...data, songs };
 
     return {
       status: 'success',
@@ -78,15 +85,17 @@ class AlbumsHandler {
     return response;
   }
 
-  async getAlbumLikesCountHandler(request, h){
+  async getAlbumLikesCountHandler(request, h) {
     const { id: albumId } = request.params;
     const likes = await this._albumLikesService.getAlbumLikesByAlbumId(albumId);
-    return h.response({
+    const response = h.response({
       status: 'success',
       data: {
-        likes: likes.length,
+        likes: likes.data.length,
       },
     });
+    if (likes.source === 'cache') response.header('X-Data-Source', 'cache');
+    return response;
   }
 
   async deleteAlbumLikeHandler(request, h) {
@@ -97,6 +106,26 @@ class AlbumsHandler {
       status: 'success',
       message: 'Menyukai album berhasil dihapus',
     };
+  }
+
+  async postUploadCoverImageHandler(request, h) {
+    const { cover } = request.payload;
+    this._validator.validateCoverImageHeaders(cover.hapi.headers);
+    const { id: albumId } = request.params;
+
+    const filename = await this._storageService.writeFile(cover, cover.hapi);
+    const dataAlbum = await this._albumsService.getAlbumById(albumId);
+
+    dataAlbum.cover = filename;
+
+    await this._albumsService.editAlbumById(albumId, dataAlbum);
+
+    const response = h.response({
+      status: 'success',
+      message: 'Sampul berhasil diunggah',
+    });
+    response.code(201);
+    return response;
   }
 }
 

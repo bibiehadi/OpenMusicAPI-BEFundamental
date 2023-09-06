@@ -125,7 +125,7 @@ class PlaylistsHandler {
 
     const response = h.response({
       status: 'success',
-      message: 'Permintaan anda dalam antrian',
+      message: 'Permintaan Anda sedang kami proses',
     });
     response.code(201);
     return response;

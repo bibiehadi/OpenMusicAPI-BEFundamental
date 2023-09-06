@@ -5,9 +5,8 @@ const AlbumPayloadSchema = Joi.object({
   year: Joi.number().required(),
 });
 
-const AlbumLikePayloadSchema = Joi.object({
-  albumId: Joi.string().required(),
-  userId: Joi.string().required(),
-});
+const CoverImageHeadersSchema = Joi.object({
+  'content-type': Joi.string().valid('image/apng', 'image/avif', 'image/gif', 'image/jpeg', 'image/jpg', 'image/png', 'image/webp').required(),
+}).unknown();
 
-module.exports = { AlbumPayloadSchema, AlbumLikePayloadSchema };
+module.exports = { AlbumPayloadSchema, CoverImageHeadersSchema };

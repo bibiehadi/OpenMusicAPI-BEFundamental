@@ -1,7 +1,7 @@
 const {
   PostPlaylistPayloadSchema,
   PostSongPlaylistPayloadSchema,
-  DeleteSongPlaylistPayloadSchema, ExportsPlaylistPayloadSchema,
+  DeleteSongPlaylistPayloadSchema, ExportsPlaylistPayloadSchema, CoverImageHeadersSchema,
 } = require('./schema');
 const InvariantError = require('../../exceptions/InvariantError');
 

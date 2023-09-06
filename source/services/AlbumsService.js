@@ -17,8 +17,8 @@ class AlbumsService {
     const id = nanoid(16);
     const createdAt = new Date().toISOString();
     const query = {
-      text: 'INSERT INTO albums VALUES ($1, $2, $3, $4, $4) RETURNING id',
-      values: [id, name, year, createdAt],
+      text: 'INSERT INTO albums VALUES ($1, $2, $3, $5, $4, $4) RETURNING id',
+      values: [id, name, year, createdAt, null],
     };
 
     // eslint-disable-next-line no-underscore-dangle
@@ -48,14 +48,14 @@ class AlbumsService {
     if (!result.rowCount) {
       throw new NotFoundError('Album not found');
     }
-    return result.rows.map(mapDBToDetailAlbumsModel)[0];
+    return result.rows[0];
   }
 
-  async editAlbumById(id, { name, year }) {
+  async editAlbumById(id, { name, year, cover }) {
     const updatedAt = new Date().toISOString();
     const query = {
-      text: 'UPDATE albums SET name = $1, year = $2, updated_at = $3 WHERE id = $4 RETURNING id',
-      values: [name, year, updatedAt, id],
+      text: 'UPDATE albums SET name = $1, year = $2, cover = $3, updated_at = $4 WHERE id = $5 RETURNING id',
+      values: [name, year, cover, updatedAt, id],
     };
 
     const result = await this._pool.query(query);
